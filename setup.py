@@ -101,7 +101,7 @@ setup(
     extras_require={
         "Redis": ["redis>=2.10"],
         "ZooKeeper": ["kazoo>=2.4"],
-        "MQTT": ["paho-mqtt>=1.3"],
+        "MQTT": ["paho-mqtt>=2.1"],
         "XMPP": ["sleekxmpp>=1.3.1"],
         "zeroconf": ["zeroconf==0.19"],
         "RSA": ["python-etcd>=0.4.5", "osgiservicebridge>=1.5.1"],

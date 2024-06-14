@@ -32,9 +32,13 @@ Eclipse Foundation: see http://www.eclipse.org/paho
 import logging
 import os
 import threading
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 import paho.mqtt.client as paho
+from paho.mqtt.client import ConnectFlags, DisconnectFlags
+from paho.mqtt.enums import CallbackAPIVersion, MQTTProtocolVersion
+from paho.mqtt.properties import Properties
+from paho.mqtt.reasoncodes import ReasonCode
 
 # ------------------------------------------------------------------------------
 
@@ -68,7 +72,7 @@ class MqttClient:
         client_id: Optional[str] = None,
         clean_session: bool = False,
         protocol: int = MQTTv311,
-        transport: str = "tcp",
+        transport: Literal["tcp", "websockets", "unix"] = "tcp",
     ) -> None:
         """
         :param client_id: ID of the MQTT client
@@ -98,11 +102,19 @@ class MqttClient:
         # Publication events
         self.__in_flight: Dict[int, threading.Event] = {}
 
+        # Assert protocol version
+        try:
+            protocol_version = MQTTProtocolVersion(protocol)
+        except ValueError as ex:
+            _logger.error("Unsupported MQTT protocol version")
+            raise ex
+
         # MQTT client
         self.__mqtt = paho.Client(
-            self._client_id,
+            CallbackAPIVersion.VERSION2,
+            client_id=self._client_id,
             clean_session=clean_session,
-            protocol=protocol,
+            protocol=protocol_version,
             transport=transport,
             reconnect_on_failure=True,
         )
@@ -115,13 +127,8 @@ class MqttClient:
         self.__mqtt.on_disconnect = self.__on_disconnect
         self.__mqtt.on_message = self.__on_message
         self.__mqtt.on_publish = self.__on_publish
-
-        if protocol == paho.MQTTv5:
-            self.__mqtt.on_subscribe = self.__on_subscribe_v5
-            self.__mqtt.on_unsubscribe = self.__on_unsubscribe_v5
-        else:
-            self.__mqtt.on_subscribe = self.__on_subscribe_v3
-            self.__mqtt.on_unsubscribe = self.__on_unsubscribe_v3
+        self.__mqtt.on_subscribe = self.__on_subscribe
+        self.__mqtt.on_unsubscribe = self.__on_unsubscribe
 
         # Pelix callbacks
         self.__on_connect_cb: Optional[Callable[["MqttClient", int], None]] = None
@@ -455,7 +462,12 @@ class MqttClient:
             self.__start_timer(10)
 
     def __on_connect(
-        self, client: paho.Client, userdata: Any, flags: Dict[str, Any], result_code: int
+        self,
+        client: paho.Client,
+        userdata: Any,
+        flags: ConnectFlags,
+        rc: ReasonCode,
+        properties: Optional[Properties],
     ) -> None:
         # pylint: disable=W0613
         """
@@ -466,13 +478,9 @@ class MqttClient:
         :param flags: Response flags sent by the broker
         :param result_code: Connection result code (0: success, others: error)
         """
-        if result_code:
+        if rc.is_failure:
             # result_code != 0: something wrong happened
-            _logger.error(
-                "Error connecting the MQTT server: %s (%d)",
-                paho.connack_string(result_code),
-                result_code,
-            )
+            _logger.error("Error connecting the MQTT server: %s", rc)
         else:
             # Connection is OK: stop the reconnection timer
             self.__stop_timer()
@@ -480,11 +488,18 @@ class MqttClient:
         # Notify the caller, if any
         if self.__on_connect_cb is not None:
             try:
-                self.__on_connect_cb(self, result_code)
+                self.__on_connect_cb(self, rc.value)
             except Exception as ex:
                 _logger.exception("Error executing MQTT connection callback: %s", ex)
 
-    def __on_disconnect(self, client: paho.Client, userdata: Any, result_code: int) -> None:
+    def __on_disconnect(
+        self,
+        client: paho.Client,
+        userdata: Any,
+        flags: DisconnectFlags,
+        rc: ReasonCode,
+        properties: Optional[Properties],
+    ) -> None:
         # pylint: disable=W0613
         """
         Client has been disconnected from the server
@@ -493,13 +508,9 @@ class MqttClient:
         :param userdata: User data (unused)
         :param result_code: Disconnection reason (0: expected, 1: error)
         """
-        if result_code:
+        if rc.is_failure:
             # rc != 0: unexpected disconnection
-            _logger.error(
-                "Unexpected disconnection from the MQTT server: %s (%d)",
-                paho.connack_string(result_code),
-                result_code,
-            )
+            _logger.error("Unexpected disconnection from the MQTT server: %s", rc)
 
             # Try to reconnect
             self.__stop_timer()
@@ -508,11 +519,11 @@ class MqttClient:
         # Notify the caller, if any
         if self.__on_disconnect_cb is not None:
             try:
-                self.__on_disconnect_cb(self, result_code)
+                self.__on_disconnect_cb(self, rc.value)
             except Exception as ex:
                 _logger.exception("Error executing MQTT disconnection callback: %s", ex)
 
-    def __on_message(self, client: paho.Client, userdata: Any, msg: MqttMessage) -> None:
+    def __on_message(self, client: paho.Client, userdata: Any, msg: paho.MQTTMessage) -> None:
         # pylint: disable=W0613
         """
         A message has been received from a server
@@ -528,7 +539,9 @@ class MqttClient:
             except Exception as ex:
                 _logger.exception("Error notifying MQTT message listener: %s", ex)
 
-    def __on_publish(self, client: paho.Client, userdata: Any, mid: int) -> None:
+    def __on_publish(
+        self, client: paho.Client, userdata: Any, mid: int, reason_code: ReasonCode, properties: Properties
+    ) -> None:
         # pylint: disable=W0613
         """
         A message has been published by a server
@@ -550,27 +563,13 @@ class MqttClient:
             except Exception as ex:
                 _logger.exception("Error notifying MQTT publish listener: %s", ex)
 
-    def __on_subscribe_v3(
-        self, client: paho.Client, userdata: Any, mid: int, granted_qos: Tuple[int]
-    ) -> None:
-        # pylint: disable=W0613
-        """
-        A subscription has been accepted by the server
-
-        :param client: Client that received the message
-        :param userdata: User data (unused)
-        :param mid: Message ID
-        :param granted_qos: List of granted QoS
-        """
-        self.__on_subscribe(mid, list(granted_qos))
-
-    def __on_subscribe_v5(
+    def __on_subscribe(
         self,
         client: paho.Client,
         userdata: Any,
         mid: int,
-        reasonCodes: List[paho.ReasonCodes],
-        properties: paho.Properties,
+        reason_code_list: List[ReasonCode],
+        properties: Properties,
     ) -> None:
         # pylint: disable=W0613
         """
@@ -583,25 +582,20 @@ class MqttClient:
         :param reasonCodes: the MQTT v5.0 reason codes received from the broker for each subscribe topic
         :param properties: the MQTT v5.0 properties received from the broker
         """
-        self.__on_subscribe(mid, [r.value for r in reasonCodes])
-
-    def __on_subscribe(self, mid: int, granted_qos: List[int]) -> None:
-        """
-        Common handler of MQTT v3 and v5 subscriptions notifications
-        """
         # Notify the caller, if any
         if self.__on_subscribe_cb is not None:
             try:
-                self.__on_subscribe_cb(self, mid, granted_qos)
+                self.__on_subscribe_cb(self, mid, [r.value for r in reason_code_list])
             except Exception as ex:
                 _logger.exception("Error executing MQTT subscribe callback: %s", ex)
 
-
-    def __on_unsubscribe_v3(
+    def __on_unsubscribe(
         self,
         client: paho.Client,
         userdata: Any,
         mid: int,
+        properties: Properties,
+        reasonCodes: Union[ReasonCode, List[ReasonCode]],
     ) -> None:
         # pylint: disable=W0613
         """
@@ -619,24 +613,3 @@ class MqttClient:
                 self.__on_unsubscribe_cb(self, mid)
             except Exception as ex:
                 _logger.exception("Error executing MQTT unsubscribe callback: %s", ex)
-
-
-    def __on_unsubscribe_v5(
-        self,
-        client: paho.Client,
-        userdata: Any,
-        mid: int,
-        properties: paho.Properties,
-        reasonCodes: Union[paho.ReasonCodes, List[paho.ReasonCodes]],
-    ) -> None:
-        # pylint: disable=W0613
-        """
-        A subscription has been accepted by the server
-
-        :param client: Client that received the message
-        :param userdata: User data (unused)
-        :param mid: Message ID
-        :param properties: the MQTT v5.0 properties received from the broker
-        :param reasonCodes: the MQTT v5.0 reason codes received from the broker for each unsubscribe topic
-        """
-        self.__on_unsubscribe_v3(client, userdata, mid)

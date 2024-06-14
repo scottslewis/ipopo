@@ -33,6 +33,10 @@ import threading
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, cast
 
 import paho.mqtt.client as paho
+from paho.mqtt.client import ConnectFlags, DisconnectFlags
+from paho.mqtt.enums import CallbackAPIVersion
+from paho.mqtt.properties import Properties
+from paho.mqtt.reasoncodes import ReasonCode
 
 import pelix.constants as constants
 import pelix.services as services
@@ -368,12 +372,20 @@ class MqttConnectionFactory(services.MqttConnectorFactory):
 
             # Prepare operations once connected
             def on_connect(
-                client: paho.Client, userdata: Any, flags: Dict[str, Any], result_code: int
+                client: paho.Client,
+                userdata: Any,
+                flags: ConnectFlags,
+                rc: ReasonCode,
+                properties: Optional[Properties],
             ) -> None:
                 # pylint: disable=W0613
                 """
                 Connected to the server
                 """
+                if rc.is_failure:
+                    _logger.error("Error connecting to [%s]:%s (%s) - %s", host, port, client, pid)
+                    return
+
                 # Success !
                 _logger.debug("Connected to [%s]:%s (%s) - %s", host, port, client, pid)
 
@@ -400,7 +412,13 @@ class MqttConnectionFactory(services.MqttConnectorFactory):
                 # Store PID -> ServiceRegistration
                 self._services[pid] = holder.registration
 
-            def on_disconnect(client: paho.Client, userdata: Any, result_code: int) -> None:
+            def on_disconnect(
+                client: paho.Client,
+                userdata: Any,
+                flags: DisconnectFlags,
+                rc: ReasonCode,
+                properties: Optional[Properties],
+            ) -> None:
                 # pylint: disable=W0613
                 """
                 Disconnected from the server
@@ -416,7 +434,7 @@ class MqttConnectionFactory(services.MqttConnectorFactory):
                     holder.registration = None
 
             # Connect to the server
-            client = paho.Client()
+            client = paho.Client(CallbackAPIVersion.VERSION2)
             client.on_connect = on_connect
             client.on_disconnect = on_disconnect
             client.on_message = self.__on_message
