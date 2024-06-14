@@ -23,6 +23,13 @@ except ImportError:
     # Some interpreters don't have support for multiprocessing
     raise unittest.SkipTest("Interpreter doesn't support multiprocessing")
 
+try:
+    # Try to import modules
+    import etcd
+except ImportError:
+    # Some interpreters don't have support for multiprocessing
+    raise unittest.SkipTest("etcd module not available")
+
 import pelix
 import pelix.framework
 import pelix.rsa as rsa
@@ -175,7 +182,7 @@ class EtcdDiscoveryListenerTest(unittest.TestCase):
             self.publisher = None
         finally:
             # Stop the framework
-            pelix.framework.FrameworkFactory.delete_framework(self.framework)
+            pelix.framework.FrameworkFactory.delete_framework()
             self.framework = None
 
     def test_etcd_discover(self):
