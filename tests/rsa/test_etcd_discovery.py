@@ -167,15 +167,16 @@ class EtcdDiscoveryListenerTest(unittest.TestCase):
         """
         Cleans up external publishing framework for next test
         """
-        self.status_queue.put(None)
-        self.publisher_process.join(1)
-        self.status_queue.close()
-        self.status_queue = None
-        self.publisher = None
-        # Stop the framework
-        self.framework.stop()
-        pelix.framework.FrameworkFactory.delete_framework()
-        self.framework = None
+        try:
+            self.status_queue.put(None)
+            self.publisher_process.join(1)
+            self.status_queue.close()
+            self.status_queue = None
+            self.publisher = None
+        finally:
+            # Stop the framework
+            pelix.framework.FrameworkFactory.delete_framework(self.framework)
+            self.framework = None
 
     def test_etcd_discover(self):
         test_done_event = threading.Event()
@@ -287,27 +288,28 @@ class EtcdDiscoveryPublishTest(unittest.TestCase):
         """
         Cleans up for next test
         """
-        if self.eel_reg:
-            self.eel_reg.unregister()
-            self.eel_reg = None
+        try:
+            if self.eel_reg:
+                self.eel_reg.unregister()
+                self.eel_reg = None
 
-        if self.svc_reg:
-            self.svc_reg.unregister()
-            self.svc_reg = None
-        if self.export_reg:
-            self.export_reg.close()
-            self.export_reg = None
-        if self.advertiser:
-            self._unget_service(self._get_discovery_advertiser_sr())
-            self.advertiser = None
+            if self.svc_reg:
+                self.svc_reg.unregister()
+                self.svc_reg = None
+            if self.export_reg:
+                self.export_reg.close()
+                self.export_reg = None
+            if self.advertiser:
+                self._unget_service(self._get_discovery_advertiser_sr())
+                self.advertiser = None
 
-        if self.rsa:
-            self._unget_service(self._get_rsa_sr())
-            self.rsa = None
-
-        # Stop the framework
-        pelix.framework.FrameworkFactory.delete_framework()
-        self.framework = None
+            if self.rsa:
+                self._unget_service(self._get_rsa_sr())
+                self.rsa = None
+        finally:
+            # Stop the framework
+            pelix.framework.FrameworkFactory.delete_framework()
+            self.framework = None
 
     def _get_discovery_advertiser_sr(self) -> ServiceReference[EndpointAdvertiser]:
         assert self.framework is not None

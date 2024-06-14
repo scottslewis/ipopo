@@ -67,7 +67,7 @@ class EndpointDescriptionTests(unittest.TestCase):
         """
         Stops the framework
         """
-        self.framework.delete(True)
+        pelix.framework.FrameworkFactory.delete_framework()
 
     def test_encode_list(self):
         """
@@ -156,8 +156,8 @@ class EndpointDescriptionTests(unittest.TestCase):
 
         # Ensure everything is a string
         for key, value in res.items():
-            self.assertIsInstance(key, str)
-            self.assertIsInstance(value, str)
+            self.assertIsInstance(key, str, "Key: " + key)
+            self.assertIsInstance(value, str, "Value of " + key)
 
         # Decode
         res_2 = rsa_ed.decode_endpoint_props(res)

@@ -116,7 +116,7 @@ def encode_osgi_props(ed: "EndpointDescription") -> Dict[str, str]:
             result_props[ENDPOINT_PACKAGE_VERSION_] = ".".join(str(v) for v in ver)
 
     result_props[ENDPOINT_ID] = ed.get_id()
-    result_props[ENDPOINT_SERVICE_ID] = "{0}".format(ed.get_service_id())
+    result_props[ENDPOINT_SERVICE_ID] = str(ed.get_service_id())
     result_props[ENDPOINT_FRAMEWORK_UUID] = ed.get_framework_uuid()
     imp_configs = ed.get_imported_configs()
     if imp_configs:
@@ -231,7 +231,11 @@ def encode_endpoint_props(ed: "EndpointDescription") -> Dict[str, Any]:
         props[ECF_SERVICE_EXPORTED_ASYNC_INTERFACES] = " ".join(async_intfs)
 
     all_props = ed.get_properties()
-    other_props = {key: all_props[key] for key in all_props.keys() if not is_reserved_property(key)}
+    other_props = {
+        key: str(value) if value is not None else None
+        for key, value in all_props.items()
+        if not is_reserved_property(key)
+    }
     return merge_dicts(props, other_props)
 
 
