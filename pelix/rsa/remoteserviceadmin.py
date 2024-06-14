@@ -26,7 +26,6 @@ Remote Service Admin API
     limitations under the License.
 """
 
-import imp
 import logging
 import sys
 import threading
@@ -506,7 +505,7 @@ class RemoteServiceAdminImpl(RemoteServiceAdmin):
         return import_reg
 
     def _publish_event(self, event: RemoteServiceAdminEvent) -> None:
-        listeners = self._rsa_event_listeners[:]
+        listeners = self._rsa_event_listeners[:] if self._rsa_event_listeners else None
         if listeners:
             for l in listeners:
                 try:
