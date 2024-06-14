@@ -415,7 +415,7 @@ class Container(abc.ABC):
         :return: Always True if it doesn't raise an exception
         :raises AssertionError: Invalid properties
         """
-        if (
+        if not (
             self._bundle_context
             or self._container_props is not None
             or self._get_distribution_provider()
