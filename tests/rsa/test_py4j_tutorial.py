@@ -30,7 +30,7 @@ unittest.skip("Skipping Py4J tests due to issues with Karaf not starting correct
 
 # ------------------------------------------------------------------------------
 
-KARAF_URL = "https://archive.apache.org/dist/karaf/4.2.10/apache-karaf-4.2.10.tar.gz"
+KARAF_URL = "https://archive.apache.org/dist/karaf/4.4.6/apache-karaf-4.4.6.tar.gz"
 
 __version_info__ = (1, 0, 2)
 __version__ = ".".join(str(x) for x in __version_info__)
@@ -210,14 +210,14 @@ def use_karaf() -> Generator[subprocess.Popen, None, None]:
         print(round(time.time() - start, 3), "- Karaf started")
 
         # Add the ECF repository
-        karaf.stdin.write(b"feature:repo-add ecf\n")
-        # karaf.stdin.flush()
+        karaf.stdin.write(b"feature:repo-add https://download.eclipse.org/rt/ecf/latest/karaf-features.xml\n")
+        karaf.stdin.flush()
         wait_for_prompt(karaf)
         print(round(time.time() - start, 3), "- ECF repository added")
 
         # Install the tutorial sample
         karaf.stdin.write(b"feature:install -v ecf-rs-examples-python.java-hello\n")
-        # karaf.stdin.flush()
+        karaf.stdin.flush()
         wait_for_prompt(karaf)
         print(round(time.time() - start, 3), "- Feature installed")
 
