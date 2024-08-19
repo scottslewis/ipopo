@@ -33,8 +33,8 @@ class RemoteHelloConsumer:
     _helloservice: Any
 
     def __init__(self) -> None:
-        self._name = "Python"
-        self._msg = "Hello Java"
+        self._name = "Consumer"
+        self._msg = "Hello Impl"
         self._executor = ThreadPoolExecutor()
 
     @Validate
