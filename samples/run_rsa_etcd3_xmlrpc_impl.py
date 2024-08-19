@@ -2,16 +2,18 @@
 # -- Content-Encoding: UTF-8 --
 """
 
-Run RSA with etcd-based discovery module
+Run RSA with etcd3-based discovery module and xmlrpc distribution module and export
+samples.rsa.helloimpl_xmlrpc. NOTE:  For the etcd3 discovery to work, there must
+be an etcd3 server/service running on localhost/2379 (default etcd3 port)
 
 :author: Scott Lewis
-:copyright: Copyright 2020, Scott Lewis
+:copyright: Copyright 2024, Scott Lewis
 :license: Apache License 2.0
 :version: 1.0.2
 
 ..
 
-    Copyright 2020 Scott Lewis
+    Copyright 2024 Scott Lewis
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -77,16 +79,17 @@ def main() -> None:
         },
     )
     framework.start()
+    # start httpservice, required by the xmlrpc distribution provider
     with use_ipopo(framework.get_bundle_context()) as ipopo:
         ipopo.instantiate(
             "pelix.http.service.basic.factory",
             "http-server",
             {"pelix.http.address": HTTP_HOSTNAME, "pelix.http.port": HTTP_PORT},
         )
-        
-    bundle_context = framework.get_bundle_context()
-
-    bundle_context.install_bundle("samples.rsa.helloimpl_xmlrpc").start()
+    # install helloimpl_xmlrpc module, instantiate component and should result
+    # in export via xmlrpc distribution provider and advertisement of endpoint
+    # description via etcd3
+    framework.get_bundle_context().install_bundle("samples.rsa.helloimpl_xmlrpc").start()
     
     try:
         framework.wait_for_stop()
