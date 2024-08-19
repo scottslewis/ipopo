@@ -309,10 +309,10 @@ class Etcd3EndpointDiscovery(EndpointAdvertiser, EndpointSubscriber):
             _logger.debug("sessid=%s removed endpoint_key=%s ", self._sessionid, endpoint_key)
             self._fire_endpoint_event(EndpointEvent.REMOVED, removed_ep)
         else:
-            _logger.debug("sessid={} not removed endpoint_key={} ", self._sessionid, endpoint_key)
+            _logger.debug("sessid=%s not removed endpoint_key=%s ", self._sessionid, endpoint_key)
 
     def _add_or_modify_endpoint(self, endpoint_key: EndpointKey, value: str):
-        _logger.debug("sessid=%s adding endpoint_key=% value=%s", self._sessionid, endpoint_key, value)
+        _logger.debug("sessid=%s adding endpoint_key=%s value=%s", self._sessionid, endpoint_key, value)
         # get actual value from endpoint key 
         json_value = json.loads(value)
         json_properties = json_value["properties"]
@@ -414,4 +414,4 @@ class Etcd3EndpointDiscovery(EndpointAdvertiser, EndpointSubscriber):
                 for kv in resp.kvs:
                     # first create strings with encoding and call _process_kv
                     self._process_kv(str(kv.key, self._encoding), str(kv.value, self._encoding), True)
-        _logger.debug("connected sessid=%s to etcd3 host=% port=%s", self._sessionid, self._hostname, self._port)
+        _logger.debug("connected sessid=%s to etcd3 host=%s port=%s", self._sessionid, self._hostname, self._port)

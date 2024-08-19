@@ -30,6 +30,7 @@ be an etcd3 server/service running on localhost/2379 (default etcd3 port)
 
 import pelix.framework as pelix
 from pelix.ipopo.constants import use_ipopo
+from google.api.logging_pb2 import Logging
 
 # ------------------------------------------------------------------------------
 # Module version
@@ -50,6 +51,9 @@ ETCD_HOSTNAME = "localhost"
 
 
 def main() -> None:
+    
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
     # Define the initial bundles
     bundles = (
         "pelix.ipopo.core",

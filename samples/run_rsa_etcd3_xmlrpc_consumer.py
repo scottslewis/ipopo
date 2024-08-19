@@ -49,6 +49,8 @@ ETCD_HOSTNAME = "localhost"
 
 
 def main() -> None:
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
     # Define the initial bundles
     bundles = (
         "pelix.ipopo.core",
