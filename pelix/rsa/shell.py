@@ -28,8 +28,9 @@ Remote Service Admin Shell Commands
 import os
 from threading import RLock
 from traceback import print_exception
-from typing import TYPE_CHECKING, Any, List, Optional, Set, Tuple, TypeVar, cast
+from typing import Any, List, Optional, Set, Tuple, TypeVar, cast
 
+import pelix.rsa.remoteserviceadmin as rsa_impl
 from pelix.constants import SERVICE_ID
 from pelix.framework import BundleContext
 from pelix.internals.registry import ServiceReference
@@ -65,9 +66,6 @@ from pelix.rsa.providers.distribution import (
 )
 from pelix.shell import ShellCommandMethod, ShellCommandsProvider, ShellUtils
 from pelix.shell.beans import ShellSession
-
-if TYPE_CHECKING:
-    import pelix.rsa.remoteserviceadmin as rsa_impl
 
 # ------------------------------------------------------------------------------
 # Module version

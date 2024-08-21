@@ -27,11 +27,13 @@ Topology Manager API
 """
 
 import logging
+from typing import Any, Dict, List, Optional, cast
 
+import pelix.rsa.remoteserviceadmin as rsa_impl
 from pelix.framework import BundleContext
-from pelix.internals.registry import ServiceReference
 from pelix.internals.events import ServiceEvent
 from pelix.internals.hooks import EventListenerHook
+from pelix.internals.registry import ServiceReference
 from pelix.ipopo.decorators import Invalidate, Provides, Requires, Validate
 from pelix.rsa import (
     SERVICE_EXPORTED_INTERFACES,
@@ -44,16 +46,12 @@ from pelix.rsa import (
 )
 from pelix.rsa.endpointdescription import EndpointDescription
 from pelix.rsa.providers.discovery import (
-    EndpointAdvertiser,
     SERVICE_ENDPOINT_LISTENER,
+    EndpointAdvertiser,
     EndpointEvent,
     EndpointEventListener,
 )
 from pelix.services import SERVICE_EVENT_LISTENER_HOOK
-from typing import TYPE_CHECKING, Any, Dict, List, cast, Optional
-
-if TYPE_CHECKING:
-    import pelix.rsa.remoteserviceadmin as rsa_impl
 
 # ------------------------------------------------------------------------------
 # Module version
@@ -164,7 +162,7 @@ class TopologyManager(EventListenerHook, RemoteServiceAdminListener, EndpointEve
         self._handle_event(service_event)
 
     def _advertise_endpoint(self, ed: EndpointDescription) -> None:
-        for adv in self._advertisers:
+        for adv in self._advertisers or []:
             try:
                 adv.advertise_endpoint(ed)
             except:
@@ -175,7 +173,7 @@ class TopologyManager(EventListenerHook, RemoteServiceAdminListener, EndpointEve
                 )
 
     def _update_endpoint(self, ed: EndpointDescription) -> None:
-        for adv in self._advertisers:
+        for adv in self._advertisers or []:
             try:
                 adv.update_endpoint(ed)
             except:
@@ -186,7 +184,7 @@ class TopologyManager(EventListenerHook, RemoteServiceAdminListener, EndpointEve
                 )
 
     def _unadvertise_endpoint(self, ed: EndpointDescription) -> None:
-        for adv in self._advertisers:
+        for adv in self._advertisers or []:
             try:
                 adv.unadvertise_endpoint(ed.get_id())
             except:
