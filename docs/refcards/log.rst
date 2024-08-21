@@ -1,4 +1,4 @@
-.. module:: pelix.misc.log
+.. module:: pelix.misc
 
 .. _refcard_log:
 
@@ -42,7 +42,7 @@ Log Service
 
 The log service provides the following method:
 
-.. autoclass:: LogServiceInstance
+.. autoclass:: LogService
    :members: log
 
 
@@ -51,11 +51,11 @@ Log Reader Service
 
 The log reader provides the following methods:
 
-.. autoclass:: LogReaderService
+.. autoclass:: LogReader
    :members: add_log_listener, remove_log_listener, get_log
 
-The result of :meth:`~LogReaderService.get_log` and the argument to listeners
-registered with :meth:`~LogReaderService.add_log_listener` is a
+The result of :meth:`~LogReader.get_log` and the argument to listeners
+registered with :meth:`~LogReader.add_log_listener` is a
 :class:`LogEntry` object, giving read-only access to the following properties:
 
 .. autoclass:: LogEntry
@@ -85,7 +85,7 @@ Using the shell is pretty straightforward, as it can be seen in the
    @Requires("_logger", LOG_SERVICE)
    @Requires("_reader", LOG_READER_SERVICE)
    @Instantiate("log-sample")
-   class SampleLog(object):
+   class SampleLog:
        """
        Provides shell commands to print the content of the log service
        """

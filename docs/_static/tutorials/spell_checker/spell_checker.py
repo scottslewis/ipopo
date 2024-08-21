@@ -21,7 +21,7 @@ import re
 @Requires("_spell_dictionaries", "spell_dictionary_service", aggregate=True)
 # Automatic instantiation
 @Instantiate("spell_checker_instance")
-class SpellChecker(object):
+class SpellChecker:
     """
     A component that uses spell dictionary services to check the spelling of
     given texts.

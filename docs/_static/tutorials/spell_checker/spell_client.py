@@ -25,7 +25,7 @@ from pelix.shell import SHELL_COMMAND_SPEC
 @Provides(SHELL_COMMAND_SPEC)
 # Automatic instantiation
 @Instantiate("spell_client_instance")
-class SpellClient(object):
+class SpellClient:
     """
     A component that provides a shell command (spell.spell), using a
     Spell Checker service.

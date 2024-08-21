@@ -31,10 +31,7 @@ sys.path.insert(0, os.path.abspath(".."))
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.coverage",
-]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.coverage", "myst_parser"]
 
 # Autodoc configuration
 autodoc_member_order = "groupwise"
@@ -75,7 +72,7 @@ release = "3.0.0"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -89,7 +86,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ".gitignore", "requirements.txt"]
+exclude_patterns = ["doc-env", "_build", "Thumbs.db", ".DS_Store", ".gitignore", "requirements.txt"]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -350,3 +347,24 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+
+# -- Options for MyST Parser ------------------------------------------------
+# https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
+
+myst_heading_anchors = 6
+
+myst_enable_extensions = [
+    "amsmath",
+    "attrs_inline",
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "fieldlist",
+    "html_admonition",
+    "html_image",
+    "replacements",
+    "smartquotes",
+    "strikethrough",
+    "substitution",
+    "tasklist",
+]

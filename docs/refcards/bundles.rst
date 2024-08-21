@@ -103,7 +103,7 @@ A class is defined as the bundle activator if it is decorated with
    import pelix.constants
 
    @pelix.constants.BundleActivator
-   class Activator(object):
+   class Activator:
        """
        Bundle activator template
        """

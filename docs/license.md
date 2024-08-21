@@ -1,16 +1,14 @@
-License
-=======
+# License
 
 iPOPO is licensed under the terms of the
-`Apache Software License 2.0 <http://www.apache.org/licenses/LICENSE-2.0>`_.
+[Apache Software License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 All contributions must comply with this license.
 
-File Header
------------
+## File Header
 
 This snippet is added to the module-level documentation::
 
-    Copyright 2023 Thomas Calmant
+    Copyright 2024 <Author>
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -24,7 +22,7 @@ This snippet is added to the module-level documentation::
     See the License for the specific language governing permissions and
     limitations under the License.
 
-License Full Text
------------------
+## License Full Text
 
-.. literalinclude:: ../LICENSE
+```{literalinclude} ../LICENSE
+```

@@ -18,7 +18,7 @@ from pelix.ipopo.decorators import ComponentFactory, Property, Provides, \
 @Property("_language", "language", "EN")
 # Automatically instantiate a component when this factory is loaded
 @Instantiate("spell_dictionary_en_instance")
-class SpellDictionary(object):
+class SpellDictionary:
     """
     Implementation of a spell dictionary, for English language.
     """

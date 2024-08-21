@@ -46,7 +46,7 @@ Name                Type    Description
     @Property('_name', 'instance.name')    # Special property
     @Property('_value', 'my.value')        # Some property
     @Property('_answer', 'the.answer', 42) # Some property, with a default value
-    class Foo(object):
+    class Foo:
        def __init__(self):
            self._name = None    # This will overwritten by iPOPO
            self._value = 12     # 12 will be used if this property is not configured
