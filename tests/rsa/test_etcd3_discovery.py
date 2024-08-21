@@ -7,11 +7,12 @@ Tests the RSA discovery provider
 """
 
 import json
-import threading
+import sys
 import unittest
 from typing import Any, TypeVar
 
 from pelix.internals.registry import ServiceReference
+from pelix.utilities import EventData
 
 try:
     # Try to import modules
@@ -42,7 +43,9 @@ from pelix.rsa.topologymanagers import TopologyManager
 from tests.utilities import WrappedProcess
 
 TEST_ETCD_HOSTNAME = "localhost"
-TEST_ETCD_TOPPATH = "org.eclipse.ecf.provider.etcd3.container.Etcd3DiscoveryContainer"  # "/etcd3discovery.tests"
+TEST_ETCD_TOPPATH = (
+    "org.eclipse.ecf.provider.etcd3.container.Etcd3DiscoveryContainer"  # "/etcd3discovery.tests"
+)
 
 ENDPOINT_LISTENER_SCOPE = f"({ECF_ENDPOINT_CONTAINERID_NAMESPACE}=*)"
 
@@ -56,7 +59,7 @@ T = TypeVar("T")
 # ------------------------------------------------------------------------------
 
 
-def start_framework_for_advertise(state_queue):
+def start_framework_for_advertise(state_queue: Queue):
     """
     Starts a Pelix framework to advertise (via etcd) a helloimpl_xmlrpc
     remote service instance.  The tests can/will then discover this
@@ -111,39 +114,36 @@ def start_framework_for_advertise(state_queue):
                 "service.exported.configs": "ecf.xmlrpc.server",
             },
         )
-        # Send that we are now ready
-        state_queue.put("ready")
-        # Loop until ready processed
-        while True:
-            if state_queue.empty():
-                break
-        # Loop until we receive done message
-        while True:
-            state = state_queue.get()
-            if state is None:
-                break
-        # stop the framework gracefully
-        framework.stop()
+        try:
+            # Send that we are now ready
+            state_queue.put("ready")
+            # Loop until ready processed
+            while True:
+                if state_queue.empty():
+                    break
+            # Loop until we receive done message
+            while True:
+                state = state_queue.get(timeout=60)
+                if state is None:
+                    break
+        finally:
+            # stop the framework gracefully
+            framework.stop()
     except Exception as ex:
         state_queue.put(f"Error: {ex}")
+        sys.exit(1)
+    finally:
+        sys.exit(0)
 
 
 class EtcdDiscoveryListenerTest(unittest.TestCase):
 
     def setUp(self):
         """
-        Starts a framework in separate process to advertise a helloimpl
-        remote service.  Then starts a local framework to register the
+        Starts a local framework to register the
         TestEndpointEventListener
         """
-        # start external framework that publishes remote service
         self.status_queue = Queue()
-        self.publisher_process = WrappedProcess(
-            target=start_framework_for_advertise, args=[self.status_queue]
-        )
-        self.publisher_process.start()
-        state = self.status_queue.get(10)
-        self.assertEqual(state, "ready")
 
         # start a local framework
         self.framework = create_framework(
@@ -170,15 +170,26 @@ class EtcdDiscoveryListenerTest(unittest.TestCase):
                 {TopologyManager.ENDPOINT_LISTENER_SCOPE: ENDPOINT_LISTENER_SCOPE},
             )
 
+    def prepareFrameworkProcess(self):
+        """
+        Starts a framework in separate process to advertise a helloimpl
+        remote service
+        """
+        # start external framework that publishes remote service
+        self.publisher_process = WrappedProcess(
+            target=start_framework_for_advertise, args=[self.status_queue]
+        )
+        self.publisher_process.start()
+        state = self.status_queue.get(timeout=10)
+        self.assertEqual(state, "ready")
+
     def tearDown(self):
         """
         Cleans up external publishing framework for next test
         """
         try:
-            self.status_queue.put(None)
-            self.publisher_process.join(1)
+            self.publisher_process.kill()
             self.status_queue.close()
-            self.status_queue = None
             self.publisher = None
         finally:
             # Stop the framework
@@ -186,49 +197,15 @@ class EtcdDiscoveryListenerTest(unittest.TestCase):
             self.framework = None
 
     def test_etcd_discover(self):
-        test_done_event = threading.Event()
+        test_done_event = EventData()
 
         def test_handler_1(endpoint_event, matched_filter):
-            self.assertTrue(matched_filter, ENDPOINT_LISTENER_SCOPE)
-            self.assertIsNotNone(endpoint_event, "endpoint_event is None")
-            self.assertTrue(isinstance(endpoint_event, EndpointEvent))
-            ee_type = endpoint_event.get_type()
-            self.assertTrue(ee_type == EndpointEvent.ADDED or ee_type == EndpointEvent.REMOVED)
-            ee_ed = endpoint_event.get_endpoint_description()
-            self.assertTrue(isinstance(ee_ed, EndpointDescription))
-            self.assertIsNotNone(ee_ed.get_id(), "endpoint_description id is None")
-            self.assertIsNotNone(
-                ee_ed.get_framework_uuid(),
-                "endpoint_description framework uuid is None",
-            )
-
-            interfaces = ee_ed.get_interfaces()
-            # test that service interfaces is not None and is of type list
-            self.assertIsNotNone(interfaces)
-            self.assertTrue(isinstance(interfaces, type([])))
-            self.assertTrue("org.eclipse.ecf.examples.hello.IHello" in interfaces)
-
-            # set the test_done_event, so tester thread will continue
-            test_done_event.set()
-
-        # set the handler to the test code above
-        self.listener.set_handler(test_handler_1)
-        # wait as much as 50 seconds to complete
-        test_done_event.wait(50)
-
-    def test_etcd_discover_remove(self):
-        test_done_event = threading.Event()
-
-        def test_handler_2(endpoint_event, matched_filter):
-            if endpoint_event.get_type() == EndpointEvent.ADDED:
-                # send shutdown to trigger the removal
-                self.status_queue.put(None)
-
-            elif endpoint_event.get_type() == EndpointEvent.REMOVED:
-                # do tests
+            try:
                 self.assertTrue(matched_filter, ENDPOINT_LISTENER_SCOPE)
                 self.assertIsNotNone(endpoint_event, "endpoint_event is None")
                 self.assertTrue(isinstance(endpoint_event, EndpointEvent))
+                ee_type = endpoint_event.get_type()
+                self.assertTrue(ee_type == EndpointEvent.ADDED or ee_type == EndpointEvent.REMOVED)
                 ee_ed = endpoint_event.get_endpoint_description()
                 self.assertTrue(isinstance(ee_ed, EndpointDescription))
                 self.assertIsNotNone(ee_ed.get_id(), "endpoint_description id is None")
@@ -243,14 +220,61 @@ class EtcdDiscoveryListenerTest(unittest.TestCase):
                 self.assertTrue(isinstance(interfaces, type([])))
                 self.assertTrue("org.eclipse.ecf.examples.hello.IHello" in interfaces)
 
-                # finally set the test_done_event, so tester thread will
-                # continue
+                # set the test_done_event, so tester thread will continue
                 test_done_event.set()
+            except Exception as e:
+                test_done_event.raise_exception(e)
+
+        # set the handler to the test code above
+        self.listener.set_handler(test_handler_1)
+
+        # Start the remote process
+        self.prepareFrameworkProcess()
+
+        # wait as much as 50 seconds to complete
+        self.assertTrue(test_done_event.wait(50))
+
+    def test_etcd_discover_remove(self):
+        test_done_event = EventData()
+
+        def test_handler_2(endpoint_event, matched_filter):
+            try:
+                if endpoint_event.get_type() == EndpointEvent.ADDED:
+                    # send shutdown to trigger the removal
+                    self.status_queue.put(None)
+                elif endpoint_event.get_type() == EndpointEvent.REMOVED:
+                    # do tests
+                    self.assertTrue(matched_filter, ENDPOINT_LISTENER_SCOPE)
+                    self.assertIsNotNone(endpoint_event, "endpoint_event is None")
+                    self.assertTrue(isinstance(endpoint_event, EndpointEvent))
+                    ee_ed = endpoint_event.get_endpoint_description()
+                    self.assertTrue(isinstance(ee_ed, EndpointDescription))
+                    self.assertIsNotNone(ee_ed.get_id(), "endpoint_description id is None")
+                    self.assertIsNotNone(
+                        ee_ed.get_framework_uuid(),
+                        "endpoint_description framework uuid is None",
+                    )
+
+                    interfaces = ee_ed.get_interfaces()
+                    # test that service interfaces is not None and is of type list
+                    self.assertIsNotNone(interfaces)
+                    self.assertTrue(isinstance(interfaces, type([])))
+                    self.assertTrue("org.eclipse.ecf.examples.hello.IHello" in interfaces)
+
+                    # finally set the test_done_event, so tester thread will
+                    # continue
+                    test_done_event.set()
+            except Exception as ex:
+                test_done_event.raise_exception(ex)
 
         # set the handler to the test code above
         self.listener.set_handler(test_handler_2)
+
+        # Start the remote process
+        self.prepareFrameworkProcess()
+
         # wait as much as 60 seconds to complete
-        test_done_event.wait(60)
+        self.assertTrue(test_done_event.wait(60))
 
 
 class EtcdDiscoveryPublishTest(unittest.TestCase):
