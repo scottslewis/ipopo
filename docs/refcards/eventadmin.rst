@@ -170,7 +170,7 @@ in the ``pelix.services`` module.
     @Property('_name', constants.IPOPO_INSTANCE_NAME)
     # Auto-instantiation
     @Instantiate('publisher')
-    class Publisher(object):
+    class Publisher:
       """
       A sample publisher
       """
@@ -230,7 +230,7 @@ It has to provide the EventHandler specification, which is defined in the
     @Property('_event_handler_filter', pelix.services.PROP_EVENT_FILTER)
     # Auto-instantiation
     @Instantiate('handler')
-    class Handler(object):
+    class Handler:
       """
       A sample event handler
       """

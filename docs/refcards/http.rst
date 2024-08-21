@@ -1,5 +1,5 @@
 .. _refcard_http:
-.. module:: pelix.http.basic
+.. module:: pelix.http
 
 HTTP Service
 ============
@@ -82,14 +82,14 @@ HTTP service
 
 The HTTP service provides the following interface:
 
-.. autoclass:: HttpService
+.. autoclass:: HTTPService
    :members: get_access, get_hostname, is_https, get_registered_paths,
                  get_servlet, register_servlet, unregister
 
 The service also provides two utility methods to ease the display of error
 pages:
 
-.. autoclass:: HttpService
+.. autoclass:: HTTPService
    :members: make_not_found_page, make_exception_page
 
 
@@ -103,7 +103,7 @@ It must also have a valid ``pelix.http.path`` property, or it will be ignored.
 The binding methods described below have a ``parameters`` argument, which
 represents a set of properties of the server, given as a dictionary.
 Some parameters can also be given when using the
-:meth:`~HttpService.register_servlet` method, with the ``parameters`` argument.
+:meth:`~HTTPService.register_servlet` method, with the ``parameters`` argument.
 
 In any case, the following entries must be set by all implementations of the
 HTTP service and can't be overridden when register a servlet.
@@ -207,7 +207,7 @@ This snippet shows how to write a component providing the servlet service:
     @Instantiate('simple-servlet')
     @Provides(specifications='pelix.http.servlet')
     @Property('_path', 'pelix.http.path', "/servlet")
-    class SimpleServletFactory(object):
+    class SimpleServletFactory:
       """
       Simple servlet factory
       """

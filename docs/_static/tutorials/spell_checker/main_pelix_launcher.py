@@ -4,12 +4,15 @@
 Starts a Pelix framework and installs the Spell Checker bundles
 """
 
+# Standard library
+import logging
+
+# Our spell checker API
+from spell_checker_api import SpellChecker
+
 # Pelix framework module and utility methods
 import pelix.framework
 from pelix.utilities import use_service
-
-# Standard library
-import logging
 
 
 def main():
@@ -18,13 +21,16 @@ def main():
     """
     # Prepare the framework, with iPOPO and the shell console
     # Warning: we only use the first argument of this method, a list of bundles
-    framework = pelix.framework.create_framework((
-        # iPOPO
-        "pelix.ipopo.core",
-        # Shell core (engine)
-        "pelix.shell.core",
-        # Text console
-        "pelix.shell.console"))
+    framework = pelix.framework.create_framework(
+        (
+            # iPOPO
+            "pelix.ipopo.core",
+            # Shell core (engine)
+            "pelix.shell.core",
+            # Text console
+            "pelix.shell.console",
+        )
+    )
 
     # Start the framework, and the pre-installed bundles
     framework.start()
@@ -42,7 +48,10 @@ def main():
 
     # Sample usage of the spell checker service
     # 1. get its service reference, that describes the service itself
-    ref_config = context.get_service_reference("spell_checker_service")
+    ref_config = context.get_service_reference(SpellChecker)
+    if ref_config is None:
+        print("Error: spell service not found")
+        return
 
     # 2. the use_service method allows to grab a service and to use it inside a
     # with block. It automatically releases the service when exiting the block,
