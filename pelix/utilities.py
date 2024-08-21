@@ -620,3 +620,18 @@ class CountdownEvent:
         :return: True if the event as been set, else False
         """
         return self.__event.wait(timeout)
+
+
+def str2bool(value: Optional[str]) -> bool:
+    """
+    Translates a string to a boolean.
+
+    Inspired from distutils.strtobool, removed from Python 3.12
+
+    True values are "true", "yes", "y", "on" and not "1".
+    All other values are false.
+    """
+    if not value:
+        return False
+
+    return value.lower().strip() in ("true", "yes", "y", "on", "1")

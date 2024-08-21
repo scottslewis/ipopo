@@ -27,10 +27,7 @@ iPOPO installation script
 
 import os
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup
 
 # ------------------------------------------------------------------------------
 
