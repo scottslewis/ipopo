@@ -5,55 +5,52 @@ This bundle provides a component that is a simple implementation of the
 Dictionary service. It contains some English words.
 """
 
-# iPOPO decorators
-from pelix.ipopo.decorators import ComponentFactory, Property, Provides, \
-    Validate, Invalidate, Instantiate
+from typing import Set
+
+from spell_checker_api import SpellDictionary
+
+from pelix.framework import BundleContext
+from pelix.ipopo.decorators import ComponentFactory, Instantiate, Invalidate, Property, Provides, Validate
 
 
 # Name the iPOPO component factory
 @ComponentFactory("spell_dictionary_en_factory")
 # This component provides a dictionary service
-@Provides("spell_dictionary_service")
+@Provides(SpellDictionary)
 # It is the English dictionary
 @Property("_language", "language", "EN")
 # Automatically instantiate a component when this factory is loaded
 @Instantiate("spell_dictionary_en_instance")
-class SpellDictionary:
+class EnglishSpellDictionary(SpellDictionary):
     """
     Implementation of a spell dictionary, for English language.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Declares members, to respect PEP-8.
         """
-        self.dictionary = None
+        self.dictionary: Set[str] = set()
 
     @Validate
-    def validate(self, context):
+    def validate(self, context: BundleContext) -> None:
         """
         The component is validated. This method is called right before the
         provided service is registered to the framework.
         """
         # All setup should be done here
-        self.dictionary = {"hello", "world", "welcome", "to", "the", "ipopo",
-                           "tutorial"}
-        print('An English dictionary has been added')
+        self.dictionary = {"hello", "world", "welcome", "to", "the", "ipopo", "tutorial"}
+        print("An English dictionary has been added")
 
     @Invalidate
-    def invalidate(self, context):
+    def invalidate(self, context: BundleContext) -> None:
         """
         The component has been invalidated. This method is called right after
         the provided service has been removed from the framework.
         """
-        self.dictionary = None
+        self.dictionary = set()
 
+    # No need to have explicit types: annotations are inherited
     def check_word(self, word):
-        """
-        Determines if the given word is contained in the dictionary.
-
-        @param word the word to be checked.
-        @return True if the word is in the dictionary, False otherwise.
-        """
         word = word.lower().strip()
         return not word or word in self.dictionary

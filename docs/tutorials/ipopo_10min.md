@@ -10,6 +10,10 @@ component model are introduced, followed by a simple example that
 demonstrates the features of iPOPO. This framework uses decorators to
 describe components.
 
+:::{note}
+This tutorial has been updated to use types instead of named specifications.
+:::
+
 ## Introduction
 
 iPOPO aims to simplify service-oriented programming on OSGi frameworks
@@ -28,6 +32,9 @@ separate functional code (*i.e.* POPOs) from the non-functional code
 At run time, iPOPO combines the functional and non-functional aspects.
 To achieve this, iPOPO provides a simple and extensible service
 component model based on POPOs.
+
+Since iPOPO v3, we recommend using types as much as possible to avoid issues
+when developping large softwares with the framework.
 
 ## Basic concepts
 
@@ -78,17 +85,21 @@ specification.
 
 The example contains several bundles:
 
-* [spell_dictionary_EN.py](../_static/tutorials/spell_checker/spell_dictionary_EN.py)
+* [`spell_checker_api.py`](../_static/tutorials/spell_checker/spell_checker_api.py)
+  defines the Python
+  [protocols](https://docs.python.org/3/library/typing.html#annotating-callable-objects)
+  that describe the different services in use.
+* [`spell_dictionary_EN.py`](../_static/tutorials/spell_checker/spell_dictionary_EN.py)
   defines a component that implements the Dictionary service,
   containing some English words.
-* [spell_dictionary_FR.py](../_static/tutorials/spell_checker/spell_dictionary_FR.py)
+* [`spell_dictionary_FR.py`](../_static/tutorials/spell_checker/spell_dictionary_FR.py)
   defines a component that implements the Dictionary service,
   containing some French words.
-* [spell_checker.py](../_static/tutorials/spell_checker/spell_checker.py)
+* [`spell_checker.py`](../_static/tutorials/spell_checker/spell_checker.py)
   contains an implementation of a Spell Checker. The spell checker
   requires a dictionary service and checks if an input passage is
     correct, according to the words contained in the wished dictionary.
-* [spell_client.py](../_static/tutorials/spell_checker/spell_client.py)
+* [`spell_client.py`](../_static/tutorials/spell_checker/spell_client.py)
   provides commands for the
   [Pelix shell service](../quickstart.md#play-with-the-shell).
   This component uses a spell checker service. The user can interact
@@ -98,6 +109,41 @@ Finally, a
 [main_pelix_launcher.py](../_static/tutorials/spell_checker/main_pelix_launcher.py)
 script starts the Pelix framework. It is not considered as a bundle as
 it is not loaded by the framework, but it can control the latter.
+
+### Definining specifications
+
+:::{note}
+This section is new in iPOPO v3
+:::
+
+Instead of relying exclusively on specification names to link components
+together, it is now recommended to declare protocols or classes and to use
+those to declare injected fields.
+
+For example, the `spell_checker_api` bundle contains only the definition of
+the specifications we will use in this project.
+It is recommended to use a specific file to define specifications and constants
+in order to share it between the provider and consumer bundles.
+
+:::{literalinclude} /_static/tutorials/spell_checker/spell_checker_api.py
+:language: python
+:linenos:
+:::
+
+* The `@Specification` decorator will store in the protocol/class the name
+  of the specification. This is highly recommended as it will be the name used
+  in the Pelix service registry and when communicating with remote framework
+  if you want to use remote services.
+* We recommend using the Python `Protocol` as parent of each specification class
+  as it is meant to declare a type.
+
+Once the specifications are defined, we can continue by implementing them with
+different components.
+
+:::{note}
+Depending on your own code style, you might to easer provide explicit types
+on specification methods methods or let them be inherited from the protocol.
+:::
 
 ### The English dictionary bundle: Providing a service
 
@@ -112,6 +158,8 @@ Dictionary service. It contains few English words.
 * The `@Component` decorator is used to declare an iPOPO component. It
   must always be on top of other decorators.
 * The `@Provides` decorator indicates that the component provides a service.
+  We also indicate the type of service we provide, either using the type
+  directly (recommended) or its specification name.
 * The `@Instantiate` decorator instructs iPOPO to automatically create
   an instance of our component. The relation between components and
   instances is the same than between classes and objects in the
@@ -126,6 +174,10 @@ Dictionary service. It contains few English words.
 
 For more information about decorators, see [](../refcards/ipopo_decorators.rst).
 
+In order for IDEs and type checking tools like MyPy to help you developping
+components, you should indicate that the component class inherits from
+the specification protocols it provides.
+
 ### The French dictionary bundle: Providing a service
 
 The `spell_dictionary_FR` bundle is a similar to the
@@ -135,7 +187,7 @@ validation.
 
 :::{literalinclude} /_static/tutorials/spell_checker/spell_dictionary_FR.py
 :language: python
-:emphasize-lines: 14,18,20,32-41
+:emphasize-lines: 17,21,23,35-43
 :linenos:
 :::
 
@@ -158,12 +210,29 @@ requiring a Dictionary service and providing the Spell Checker service.
 
 * The `@Requires` decorator specifies a service dependency. This
   required service is injected in a local variable in this bundle. Its
-  `aggregate` attribute tells iPOPO to collect the list of services
+  `aggregate` attribute tells iPOPO to collect the list of services.
+  Again, the specification can be given by type or by name.
   providing the required specification, instead of the first one.
 * The `@BindField` decorator indicates that a new required service
   bounded to the platform.
 * The `@UnbindField` decorator indicates that one of required service
   has gone away.
+
+As you can see, the injected field is declared twice:
+
+* in the `@Requires` decorator, so that iPOPO knows what fields must be injected and how,
+  which is mandatory for iPOPO to work
+* at the class level, to give the injected field a type hint
+
+This is due to a limitation of Python that doesn't support annotating class members.
+That being said, it is highly recommended to manually declare the field class level at class with its type
+in order to benefit fully from type checking tools and code completion in your IDE.
+
+Also note that type hint you indicate must match the parameters you give to `@Requires`:
+
+* If optional is set True, the injected value can be None, else it can only be of the specification type
+* If aggregate is set to True, the injected value is a list
+* Adapt the type for more complex decorators like `@RequiresMap`, ...
 
 ### The spell client bundle
 
