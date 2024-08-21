@@ -1,4 +1,3 @@
-version: '3'
 services:
   xmpp:
     image: ejabberd/ecs:latest

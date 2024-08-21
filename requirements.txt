@@ -1,9 +1,8 @@
 jsonrpclib-pelix>=0.4.3
 redis>=2.10
 kazoo==2.8.0
-paho-mqtt>=1.6.1
-zeroconf==0.19
-python-etcd>=0.4.5
+paho-mqtt>=2
+zeroconf==0.19.1
 osgiservicebridge>=1.5.1
 pyyaml>=6.0
-etcd3>=0.12.0
+etcd3-fc>=0.12.0
