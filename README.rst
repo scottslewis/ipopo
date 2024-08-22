@@ -7,10 +7,6 @@
 iPOPO: A Service-Oriented Component Model for Python
 ####################################################
 
-.. image:: https://badges.gitter.im/Join%20Chat.svg
-   :alt: Join the chat at https://gitter.im/tcalmant/ipopo
-   :target: https://gitter.im/tcalmant/ipopo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-
 .. image:: https://img.shields.io/pypi/v/ipopo.svg
    :target: https://pypi.python.org/pypi/ipopo/
    :alt: Latest Version
@@ -19,12 +15,12 @@ iPOPO: A Service-Oriented Component Model for Python
    :target: https://pypi.python.org/pypi/ipopo/
    :alt: License
 
-.. image:: https://travis-ci.org/tcalmant/ipopo.svg?branch=master
-   :target: https://travis-ci.org/tcalmant/ipopo
-   :alt: Travis-CI status
+.. image:: https://github.com/tcalmant/ipopo/actions/workflows/ci-build.yml/badge.svg?branch=v3
+   :target: https://github.com/tcalmant/ipopo/actions/workflows/ci-build.yml
+   :alt: GitHub Actions CI status
 
-.. image:: https://coveralls.io/repos/github/tcalmant/ipopo/badge.svg?branch=master
-   :target: https://coveralls.io/github/tcalmant/ipopo?branch=master
+.. image:: https://coveralls.io/repos/github/tcalmant/ipopo/badge.svg?branch=v3
+   :target: https://coveralls.io/github/tcalmant/ipopo?branch=v3
    :alt: Coveralls status
 
 `iPOPO <https://ipopo.readthedocs.io/>`_ is a Python-based Service-Oriented

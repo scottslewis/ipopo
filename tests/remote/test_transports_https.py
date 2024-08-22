@@ -43,10 +43,14 @@ from tests.remote.test_transports_http import SVC_SPEC, HttpTransportsTest, Remo
 
 try:
     # Try to import modules
+    import multiprocessing
     from multiprocessing import Process, Queue
 
     # IronPython fails when creating a queue
     Queue()
+
+    # Trick to avoid pytest hanging
+    multiprocessing.set_start_method("spawn", force=True)
 except ImportError:
     # Some interpreters don't have support for multiprocessing
     raise unittest.SkipTest("Interpreter doesn't support multiprocessing")
@@ -149,7 +153,7 @@ def export_framework(state_queue: Queue, transport: str, components: Iterable[Tu
         # Stopping
         state_queue.put("stopping")
         framework.stop()
-
+        framework.delete()
     except Exception as ex:
         state_queue.put("Error: {0}".format(ex))
     finally:

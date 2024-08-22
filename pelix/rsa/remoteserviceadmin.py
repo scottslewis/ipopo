@@ -30,7 +30,6 @@ import logging
 import sys
 import threading
 from datetime import datetime
-from distutils.util import strtobool
 from traceback import print_exception
 from typing import IO, Any, Dict, List, Optional, Protocol, Set, Tuple, Union, cast
 
@@ -88,6 +87,7 @@ from pelix.rsa.providers.distribution import (
     ImportContainer,
     ImportDistributionProvider,
 )
+from pelix.utilities import str2bool
 
 # ------------------------------------------------------------------------------
 # Module version
@@ -134,7 +134,7 @@ class Activator(ActivatorProto):
         if not debug_str:
             debug_str = DEBUG_PROPERTY_DEFAULT
 
-        if strtobool(debug_str):
+        if str2bool(debug_str):
             self._debug_reg = self._context.register_service(
                 RemoteServiceAdminListener,
                 DebugRemoteServiceAdminListener(),

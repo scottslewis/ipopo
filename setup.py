@@ -4,9 +4,9 @@
 iPOPO installation script
 
 :author: Thomas Calmant
-:copyright: Copyright 2023, Thomas Calmant
+:copyright: Copyright 2024, Thomas Calmant
 :license: Apache License 2.0
-:version: 1.0.2
+:version: 3.0.0
 
 ..
 
@@ -27,15 +27,12 @@ iPOPO installation script
 
 import os
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup
 
 # ------------------------------------------------------------------------------
 
 # Module version
-__version_info__ = (1, 0, 2)
+__version_info__ = (3, 0, 0)
 __version__ = ".".join(str(x) for x in __version_info__)
 
 # Documentation strings format
@@ -87,23 +84,18 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Software Development :: Libraries :: Application Frameworks",
     ],
-    install_requires=["jsonrpclib-pelix>=0.3.1"],
+    install_requires=["jsonrpclib-pelix>=0.4.3"],
     extras_require={
         "Redis": ["redis>=2.10"],
-        "ZooKeeper": ["kazoo>=2.4"],
+        "ZooKeeper": ["kazoo==2.8.0"],
         "MQTT": ["paho-mqtt>=2.1"],
-        "XMPP": ["sleekxmpp>=1.3.1"],
+        "XMPP": ["slixmpp>=1.8.4"],
         "zeroconf": ["zeroconf==0.19"],
-        "RSA": ["python-etcd>=0.4.5", "osgiservicebridge>=1.5.1"],
+        "RSA": ["etcd3>=0.12.0", "osgiservicebridge>=1.5.1"],
     },
 )

@@ -146,7 +146,8 @@ def start_karaf(karaf_root: pathlib.Path) -> Generator[subprocess.Popen, None, N
     finally:
         if karaf is not None:
             karaf.kill()
-
+            karaf.wait(1)
+            karaf = None
 
 def wait_for_prompt(process: subprocess.Popen, prompt: str = "karaf@root()>") -> None:
     """

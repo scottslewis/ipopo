@@ -40,10 +40,14 @@ from tests.utilities import WrappedProcess
 
 try:
     # Try to import modules
+    import multiprocessing
     from multiprocessing import Process, Queue
 
     # IronPython fails when creating a queue
     Queue()
+
+    # Trick to avoid pytest hanging
+    multiprocessing.set_start_method("spawn", force=True)
 except ImportError:
     # Some interpreters don't have support for multiprocessing
     raise unittest.SkipTest("Interpreter doesn't support multiprocessing")
@@ -188,6 +192,7 @@ def export_framework(
         # Stopping
         state_queue.put("stopping")
         framework.stop()
+        framework.delete()
     except Exception as ex:
         state_queue.put(f"Error: {ex}")
 
@@ -320,8 +325,12 @@ class MqttTransportsTest(unittest.TestCase):
         finally:
             # Stop everything (and delete the framework in any case
             FrameworkFactory.delete_framework()
-            peer.terminate()
-            status_queue.close()
+            try:
+                peer.kill()
+                peer.join(5)
+                peer.close()
+            finally:
+                status_queue.close()
 
     def test_mqttrpc(self) -> None:
         """

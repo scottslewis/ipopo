@@ -28,10 +28,14 @@ from typing import Any
 
 try:
     # Try to import modules
+    import multiprocessing
     from multiprocessing import Process, Queue
 
     # IronPython fails when creating a queue
     Queue()
+
+    # Trick to avoid pytest hanging
+    multiprocessing.set_start_method("spawn", force=True)
 except ImportError:
     # Some interpreters don't have support for multiprocessing
     raise unittest.SkipTest("Interpreter doesn't support multiprocessing")

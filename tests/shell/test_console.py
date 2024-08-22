@@ -120,6 +120,7 @@ else:
                 try:
                     # Kill it in any case
                     process.terminate()
+                    process.wait(1)
                 except OSError:
                     # Process was already stopped
                     pass
@@ -167,6 +168,7 @@ else:
                 try:
                     # Kill it in any case
                     process.terminate()
+                    process.wait(1)
                 except OSError:
                     # Process was already stopped
                     pass
