@@ -605,7 +605,7 @@ class _ReportCommands(ShellCommandsProvider, ShellReport):
                 "report.levels": levels,
                 "time.stamp": time.time(),
                 "time.local": str(datetime.datetime.now()),
-                "time.utc": str(datetime.datetime.utcnow()),
+                "time.utc": str(datetime.datetime.now(datetime.timezone.utc)),
             }
 
         return self.__report
