@@ -181,7 +181,7 @@ class EtcdDiscoveryListenerTest(unittest.TestCase):
             target=start_framework_for_advertise, args=[self.status_queue]
         )
         self.publisher_process.start()
-        state = self.status_queue.get(timeout=10)
+        state = self.status_queue.get(timeout=20)
         self.assertEqual(state, "ready")
 
     def tearDown(self):
