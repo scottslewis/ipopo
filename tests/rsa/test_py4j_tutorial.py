@@ -10,6 +10,7 @@ import io
 import os
 import pathlib
 import subprocess
+import sys
 import tarfile
 import tempfile
 import time
@@ -90,7 +91,10 @@ def install_karaf(folder_str: Optional[str] = None) -> pathlib.Path:
 
                     try:
                         os.chdir(folder)
-                        tar.extractall(path, filtered_members, numeric_owner=numeric_owner)
+                        if sys.version_info < (3, 12):
+                            tar.extractall(path, filtered_members, numeric_owner=numeric_owner)
+                        else:
+                            tar.extractall(path, filtered_members, numeric_owner=numeric_owner, filter="data")
                     finally:
                         os.chdir(cur_dir)
 
