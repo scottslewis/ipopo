@@ -325,9 +325,12 @@ class MqttTransportsTest(unittest.TestCase):
         finally:
             # Stop everything (and delete the framework in any case
             FrameworkFactory.delete_framework()
-            peer.kill()
-            peer.close()
-            status_queue.close()
+            try:
+                peer.kill()
+                peer.join(5)
+                peer.close()
+            finally:
+                status_queue.close()
 
     def test_mqttrpc(self) -> None:
         """

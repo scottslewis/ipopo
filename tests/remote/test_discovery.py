@@ -282,9 +282,13 @@ class HttpTransportsTest(unittest.TestCase):
                 FrameworkFactory.delete_framework()
             except:
                 pass
-            peer.kill()
-            peer.close()
-            status_queue.close()
+
+            try:
+                peer.kill()
+                peer.join(5)
+                peer.close()
+            finally:
+                status_queue.close()
 
     def test_multicast(self) -> None:
         """

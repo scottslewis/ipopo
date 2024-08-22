@@ -190,10 +190,12 @@ class EtcdDiscoveryListenerTest(unittest.TestCase):
         """
         try:
             self.publisher_process.kill()
+            self.publisher_process.join(5)
             self.publisher_process.close()
+        finally:
             self.status_queue.close()
             self.publisher = None
-        finally:
+
             # Stop the framework
             pelix.framework.FrameworkFactory.delete_framework()
             self.framework = None
