@@ -7,7 +7,6 @@ Tests the RSA discovery provider
 """
 
 import json
-import sys
 import unittest
 from typing import Any, TypeVar
 
@@ -33,7 +32,7 @@ try:
     import etcd3
 except ImportError:
     # Some interpreters don't have support for multiprocessing
-    raise unittest.SkipTest("etcd module not available")
+    raise unittest.SkipTest("etcd3 module not available")
 
 import pelix
 import pelix.framework
@@ -133,11 +132,9 @@ def start_framework_for_advertise(state_queue: Queue):
         finally:
             # stop the framework gracefully
             framework.stop()
+            framework.delete()
     except Exception as ex:
         state_queue.put(f"Error: {ex}")
-        sys.exit(1)
-    finally:
-        sys.exit(0)
 
 
 class EtcdDiscoveryListenerTest(unittest.TestCase):
@@ -193,6 +190,7 @@ class EtcdDiscoveryListenerTest(unittest.TestCase):
         """
         try:
             self.publisher_process.kill()
+            self.publisher_process.close()
             self.status_queue.close()
             self.publisher = None
         finally:

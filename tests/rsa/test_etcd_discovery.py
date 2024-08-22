@@ -15,10 +15,14 @@ from pelix.internals.registry import ServiceReference
 
 try:
     # Try to import modules
+    import multiprocessing
     from multiprocessing import Process, Queue
 
     # IronPython fails when creating a queue
     Queue()
+
+    # Trick to avoid pytest hanging
+    multiprocessing.set_start_method("spawn", force=True)
 except ImportError:
     # Some interpreters don't have support for multiprocessing
     raise unittest.SkipTest("Interpreter doesn't support multiprocessing")
@@ -124,6 +128,7 @@ def start_framework_for_advertise(state_queue):
                 break
         # stop the framework gracefully
         framework.stop()
+        framework.delete()
     except Exception as ex:
         state_queue.put(f"Error: {ex}")
 
@@ -142,7 +147,7 @@ class EtcdDiscoveryListenerTest(unittest.TestCase):
             target=start_framework_for_advertise, args=[self.status_queue]
         )
         self.publisher_process.start()
-        state = self.status_queue.get(10)
+        state = self.status_queue.get(timeout=10)
         self.assertEqual(state, "ready")
 
         # start a local framework
@@ -178,7 +183,6 @@ class EtcdDiscoveryListenerTest(unittest.TestCase):
             self.status_queue.put(None)
             self.publisher_process.join(1)
             self.status_queue.close()
-            self.status_queue = None
             self.publisher = None
         finally:
             # Stop the framework
